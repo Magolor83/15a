@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schwangerschaft: Konsum-Check Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8f4;
+      --panel: #ffffff;
+      --ink: #18211f;
+      --muted: #5d6966;
+      --line: #d9dfd9;
+      --tabu: #c84b3d;
+      --cook: #cf8c2a;
+      --limit: #267c7a;
+      --ask: #4d63a6;
+      --soft-red: #fff0ed;
+      --soft-amber: #fff6e6;
+      --soft-teal: #eaf8f6;
+      --soft-blue: #eef3ff;
+      --green: #3d7c45;
+      --shadow: 0 18px 50px rgba(24, 33, 31, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .74), rgba(247, 248, 244, .98) 420px),
+        radial-gradient(circle at 8% 0%, rgba(38, 124, 122, .12), transparent 330px),
+        radial-gradient(circle at 90% 4%, rgba(200, 75, 61, .10), transparent 360px),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .wrap {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: rgba(247, 248, 244, .86);
+      border-bottom: 1px solid rgba(217, 223, 217, .86);
+    }
+
+    .topbar-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background:
+        conic-gradient(from 220deg, var(--tabu), var(--cook), var(--limit), var(--ask), var(--tabu));
+      position: relative;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 7px #fff, 0 5px 18px rgba(24, 33, 31, .12);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .source-pill,
+    .date-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .78);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    main {
+      padding: 34px 0 54px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+
+    .intro {
+      min-height: 390px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--limit);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 840px;
+      font-size: clamp(42px, 5.4vw, 78px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 18px 0 0;
+      max-width: 790px;
+      color: #35413f;
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.48;
+    }
+
+    .hero-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .metric {
+      background: rgba(255, 255, 255, .82);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 104px;
+    }
+
+    .metric-value {
+      display: block;
+      font-size: 34px;
+      font-weight: 850;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .metric-label {
+      display: block;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .clinical-note {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--ask);
+      background: rgba(238, 243, 255, .72);
+      color: #34405d;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .overview-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 1.2;
+    }
+
+    .panel-text {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .status-rail {
+      height: 18px;
+      display: grid;
+      grid-template-columns: var(--tabu-w) var(--cook-w) var(--limit-w) var(--ask-w);
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e7ece8;
+      border: 1px solid rgba(24, 33, 31, .08);
+    }
+
+    .status-rail span:nth-child(1) { background: var(--tabu); }
+    .status-rail span:nth-child(2) { background: var(--cook); }
+    .status-rail span:nth-child(3) { background: var(--limit); }
+    .status-rail span:nth-child(4) { background: var(--ask); }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      color: #3b4745;
+      background: #fbfcfa;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 7px;
+    }
+
+    .legend-count {
+      font-weight: 850;
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .risk-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .risk-row {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr) 34px;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .risk-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #eef1ee;
+      overflow: hidden;
+      border: 1px solid rgba(24, 33, 31, .06);
+    }
+
+    .risk-fill {
+      height: 100%;
+      width: var(--w);
+      background: var(--c);
+      border-radius: inherit;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, .90);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 30px rgba(24, 33, 31, .05);
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 14px 0 42px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search input:focus,
+    select:focus,
+    .seg button:focus-visible,
+    .clear-btn:focus-visible {
+      border-color: var(--limit);
+      box-shadow: 0 0 0 4px rgba(38, 124, 122, .12);
+    }
+
+    .search-symbol {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    select {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 36px 0 12px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .seg {
+      display: inline-grid;
+      grid-auto-flow: column;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .seg button {
+      min-height: 44px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      padding: 0 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .seg button:last-child {
+      border-right: 0;
+    }
+
+    .seg button.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      min-height: 34px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      border-color: var(--limit);
+      background: var(--soft-teal);
+      color: #124d4b;
+      font-weight: 750;
+    }
+
+    .result-line {
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .risk-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 264px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .risk-card:before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 5px;
+      background: var(--accent);
+    }
+
+    .risk-card[data-status="tabu"] { --accent: var(--tabu); }
+    .risk-card[data-status="cook"] { --accent: var(--cook); }
+    .risk-card[data-status="limit"] { --accent: var(--limit); }
+    .risk-card[data-status="ask"] { --accent: var(--ask); }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      min-height: 26px;
+      padding: 0 9px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 11%, #fff);
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, #fff);
+    }
+
+    .card-category {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      text-align: right;
+    }
+
+    .risk-card h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.17;
+      letter-spacing: 0;
+    }
+
+    .examples {
+      color: #3e4a47;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .why {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .action {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      color: #253230;
+      line-height: 1.42;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .sources-mini {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .source-num {
+      width: 24px;
+      height: 24px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #f0f3f0;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 750;
+      border: 1px solid var(--line);
+    }
+
+    aside {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 88px;
+    }
+
+    .side-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(24, 33, 31, .05);
+    }
+
+    .side-panel h2,
+    .section-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 1.2;
+    }
+
+    .side-panel p {
+      color: var(--muted);
+      margin: 8px 0 0;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .calculator {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .calc-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 84px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .calc-label {
+      display: grid;
+      gap: 2px;
+      color: #2a3634;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .calc-label small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .calc-row input {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      text-align: right;
+      outline: none;
+    }
+
+    .caffeine-total {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #f7faf8;
+      border: 1px solid var(--line);
+    }
+
+    .total-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .total-number {
+      font-size: 32px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .limit-bar {
+      margin-top: 10px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--limit) 0 68%, var(--cook) 68% 100%);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .limit-marker {
+      position: absolute;
+      top: -5px;
+      width: 3px;
+      height: 22px;
+      border-radius: 4px;
+      background: var(--ink);
+      left: var(--pos);
+      transform: translateX(-50%);
+    }
+
+    .calc-feedback {
+      margin-top: 10px;
+      color: #35413f;
+      line-height: 1.4;
+      font-size: 13px;
+    }
+
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .decision-item {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      color: #33413e;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .decision-key {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 900;
+      background: var(--limit);
+    }
+
+    .decision-item:nth-child(1) .decision-key { background: var(--tabu); }
+    .decision-item:nth-child(2) .decision-key { background: var(--cook); }
+    .decision-item:nth-child(3) .decision-key { background: var(--ask); }
+
+    .source-section {
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+    }
+
+    .source-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .source-card {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      background: rgba(255, 255, 255, .74);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      min-height: 86px;
+      text-decoration: none;
+    }
+
+    .source-card strong {
+      display: block;
+      line-height: 1.25;
+      font-size: 14px;
+    }
+
+    .source-card span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      background: rgba(255, 255, 255, .72);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .clear-btn {
+      margin-top: 12px;
+      min-height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1120px) {
+      .hero,
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      .wrap {
+        width: min(100% - 22px, 1440px);
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px 0;
+      }
+
+      .hero-meta,
+      .card-grid,
+      .source-grid,
+      aside {
+        grid-template-columns: 1fr;
+      }
+
+      .control-row {
+        grid-template-columns: 1fr;
+      }
+
+      .seg {
+        grid-auto-flow: row;
+      }
+
+      .seg button {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .seg button:last-child {
+        border-bottom: 0;
+      }
+
+      .overview-panel,
+      .side-panel,
+      .controls,
+      .risk-card {
+        padding: 14px;
+      }
+
+      .legend {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        padding-top: 22px;
+      }
+
+      .intro {
+        min-height: 0;
+      }
+
+      h1 {
+        font-size: 40px;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .risk-row {
+        grid-template-columns: 96px minmax(0, 1fr) 28px;
+      }
+
+      .panel-head,
+      .card-top {
+        flex-direction: column;
+      }
+
+      .card-category {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand" aria-label="Dashboard Titel">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <p class="brand-title"><strong>Schwangerschaft: Konsum-Check</strong></p>
+          <p class="brand-subtitle">Recherche-Dashboard zu Lebensmitteln, Getränken, Substanzen und Medikamenten</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="date-pill">Stand: 07.05.2026</span>
+        <a class="source-pill" href="#quellen">Quellen ansehen</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" aria-label="Übersicht">
+      <div class="intro">
+        <div>
+          <p class="eyebrow">Evidenzbasiert, alltagstauglich, filterbar</p>
+          <h1>Was Schwangere meiden, erhitzen oder begrenzen sollten.</h1>
+          <p class="lead">Die Empfehlungen sind nach praktischer Entscheidung sortiert: komplett meiden, nur sicher gegart essen, mengenmäßig begrenzen oder individuell ärztlich klären.</p>
+        </div>
+        <div>
+          <div class="hero-meta" aria-label="Kennzahlen">
+            <div class="metric">
+              <span class="metric-value" id="metricTabu">0</span>
+              <span class="metric-label">Einträge mit klarer Meiden-Empfehlung</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="metricCook">0</span>
+              <span class="metric-label">Einträge, die durch vollständiges Erhitzen sicherer werden</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="metricSources">0</span>
+              <span class="metric-label">behördliche oder fachliche Primärquellen</span>
+            </div>
+          </div>
+          <div class="clinical-note">Hinweis: Das Dashboard ersetzt keine medizinische Beratung. Bei Vorerkrankungen, Medikamenten, Suchtmitteln, auffälligen Symptomen oder unklarem Kontakt zu Risikolebensmitteln bitte Gynäkologin/Gynäkologen, Hebamme, Apotheke oder eine spezialisierte Beratungsstelle einbeziehen.</div>
+        </div>
+      </div>
+
+      <div class="overview-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Ampelverteilung</h2>
+            <p class="panel-text">Die Breite zeigt, wie viele Dashboard-Einträge in jede Empfehlung fallen.</p>
+          </div>
+        </div>
+        <div class="status-rail" id="statusRail" aria-label="Verteilung der Empfehlungen">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div>
+          <h2 class="panel-title">Hauptgründe</h2>
+          <p class="panel-text">Nicht jedes Risiko ist gleich: Die häufigsten Gründe sind Infektionen, Schadstoffe und fehlende Sicherheitsdaten.</p>
+          <div class="risk-stack" id="riskStack"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Interaktives Dashboard">
+      <div>
+        <div class="controls">
+          <div class="control-row">
+            <label class="search">
+              <span class="search-symbol" aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Suchen: Salami, Sushi, Kaffee, Lakritz, Ibuprofen..." autocomplete="off">
+            </label>
+            <select id="categorySelect" aria-label="Kategorie auswählen">
+              <option value="all">Alle Kategorien</option>
+            </select>
+            <div class="seg" aria-label="Empfehlung filtern">
+              <button type="button" data-status="all" class="active">Alle</button>
+              <button type="button" data-status="tabu">Meiden</button>
+              <button type="button" data-status="cook">Erhitzen</button>
+              <button type="button" data-status="limit">Limit</button>
+              <button type="button" data-status="ask">Rücksprache</button>
+            </div>
+          </div>
+          <div class="filter-chips" id="topicChips" aria-label="Themenfilter"></div>
+          <div class="result-line" id="resultLine"></div>
+          <button class="clear-btn" type="button" id="resetFilters">Filter löschen</button>
+        </div>
+
+        <div class="card-grid" id="cards"></div>
+      </div>
+
+      <aside aria-label="Werkzeuge und schnelle Regeln">
+        <section class="side-panel">
+          <h2>Koffein-Rechner</h2>
+          <p>Deutschland nennt keine harte Menge, EFSA/Gesund ins Leben nutzen 200 mg pro Tag als Orientierung. Energydrinks werden trotzdem zum Verzicht empfohlen.</p>
+          <div class="calculator" id="caffeineCalc"></div>
+          <div class="caffeine-total">
+            <div class="total-head">
+              <span>Gesamt</span>
+              <strong class="total-number"><span id="caffeineTotal">0</span> mg</strong>
+            </div>
+            <div class="limit-bar" aria-hidden="true"><span class="limit-marker" id="limitMarker"></span></div>
+            <div class="calc-feedback" id="caffeineFeedback"></div>
+          </div>
+        </section>
+
+        <section class="side-panel">
+          <h2>Schnellregel</h2>
+          <p>Wenn keine Zeit für Recherche ist, hilft diese Dreierprüfung beim Einkauf und Essen außer Haus.</p>
+          <div class="decision-list">
+            <div class="decision-item">
+              <span class="decision-key">1</span>
+              <span>Roh, unpasteurisiert, offen verkauft oder lange gekühlt? Dann meiden oder unmittelbar vollständig erhitzen.</span>
+            </div>
+            <div class="decision-item">
+              <span class="decision-key">2</span>
+              <span>Fleisch, Fisch, Eier, Sprossen, Tiefkühlbeeren oder Feinkost? Nur sicher durchgegart, sauber getrennt und frisch verzehren.</span>
+            </div>
+            <div class="decision-item">
+              <span class="decision-key">3</span>
+              <span>Arznei, Supplement, Kraut, THC/CBD oder Alkohol/Nikotin? Nicht improvisieren, sondern meiden oder medizinisch klären.</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="source-section" id="quellen">
+      <h2 class="section-title">Quellenbasis</h2>
+      <div class="source-grid" id="sourceGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    const sources = [
+      {
+        id: 1,
+        name: "DGE: Handlungsempfehlungen Ernährung in der Schwangerschaft",
+        org: "Deutsche Gesellschaft für Ernährung / Netzwerk Gesund ins Leben",
+        url: "https://www.dge.de/gesunde-ernaehrung/gezielte-ernaehrung/ernaehrung-in-schwangerschaft-und-stillzeit/handlungsempfehlungen-ernaehrung-in-der-schwangerschaft/"
+      },
+      {
+        id: 2,
+        name: "BfR: Risikobewertung für Schwangere",
+        org: "Bundesinstitut für Risikobewertung",
+        url: "https://www.bfr.bund.de/ueber-uns/risikobewertung-durch-das-bfr/schwangere/"
+      },
+      {
+        id: 3,
+        name: "BfR: Lebensmittelinfektionen im Privathaushalt",
+        org: "Bundesinstitut für Risikobewertung",
+        url: "https://www.bfr.bund.de/fragen-und-antworten/thema/lebensmittelinfektionen-im-privathaushalt-quellen-erkennen-risiken-vermeiden/"
+      },
+      {
+        id: 4,
+        name: "Gesund ins Leben: Kaffee und Koffein",
+        org: "BZfE / Netzwerk Gesund ins Leben",
+        url: "https://www.gesund-ins-leben.de/fuer-fachkreise/familien-vor-und-in-der-schwangerschaft/nachgefragt/kaffee-und-koffein-in-der-schwangerschaft-wie-viel-darf-es-sein/"
+      },
+      {
+        id: 5,
+        name: "CDC: Safer Food Choices for Pregnant Women",
+        org: "Centers for Disease Control and Prevention",
+        url: "https://www.cdc.gov/food-safety/foods/pregnant-women.html"
+      },
+      {
+        id: 6,
+        name: "CDC: Alcohol Use During Pregnancy",
+        org: "Centers for Disease Control and Prevention",
+        url: "https://www.cdc.gov/alcohol-pregnancy/about/index.html"
+      },
+      {
+        id: 7,
+        name: "CDC: Cannabis and Pregnancy",
+        org: "Centers for Disease Control and Prevention",
+        url: "https://www.cdc.gov/cannabis/health-effects/pregnancy.html"
+      },
+      {
+        id: 8,
+        name: "EPA/FDA: Advice about Eating Fish and Shellfish",
+        org: "U.S. Environmental Protection Agency / FDA",
+        url: "https://www.epa.gov/choose-fish-and-shellfish-wisely/epa-fda-advice-about-eating-fish-and-shellfish"
+      },
+      {
+        id: 9,
+        name: "BfR: Chininhaltige Getränke",
+        org: "Bundesinstitut für Risikobewertung",
+        url: "https://www.bfr.bund.de/presseinformation/chininhaltige-getraenke-sind-nichts-fuer-schwangere/"
+      },
+      {
+        id: 10,
+        name: "Embryotox: Arzneimittel in Schwangerschaft und Stillzeit",
+        org: "Charite Universitätsmedizin Berlin",
+        url: "https://www.embryotox.de/arzneimittel/"
+      },
+      {
+        id: 11,
+        name: "NIH ODS: Dietary Supplements and Pregnancy",
+        org: "National Institutes of Health",
+        url: "https://ods.od.nih.gov/factsheets/Pregnancy/"
+      },
+      {
+        id: 12,
+        name: "NHS: Vitamins and Supplements in Pregnancy",
+        org: "National Health Service",
+        url: "https://www.nhs.uk/pregnancy/keeping-well/vitamins-supplements-and-nutrition/"
+      },
+      {
+        id: 13,
+        name: "BfR: Toxoplasmen",
+        org: "Bundesinstitut für Risikobewertung",
+        url: "https://www.bfr.bund.de/en/food-safety/assessment-of-microbial-risks-in-foods/parasites/toxoplasms/"
+      },
+      {
+        id: 14,
+        name: "WHO: Restricting Caffeine Intake During Pregnancy",
+        org: "World Health Organization",
+        url: "https://www.who.int/tools/elena/interventions/caffeine-pregnancy"
+      }
+    ];
+
+    const items = [
+      {
+        title: "Alkohol",
+        examples: "Wein, Bier, Spirituosen, Cocktails, Restalkohol in Desserts oder Soßen beachten.",
+        status: "tabu",
+        category: "Substanzen",
+        topics: ["Genussmittel", "Plazenta"],
+        why: "Es gibt keine bekannte sichere Menge und kein sicheres Zeitfenster in der Schwangerschaft.",
+        action: "Vollständig verzichten. Bei regelmäßigem Konsum Unterstützung suchen, nicht allein durchbeißen.",
+        sources: [1, 6]
+      },
+      {
+        title: "Tabak, Nikotin und E-Zigaretten",
+        examples: "Zigaretten, Vapes, E-Zigaretten, Nikotinbeutel, Shisha und Passivrauch.",
+        status: "tabu",
+        category: "Substanzen",
+        topics: ["Genussmittel", "Plazenta"],
+        why: "Rauchen erhöht unter anderem Risiken für Fehl- und Frühgeburten, geringes Geburtsgewicht und Entwicklungsprobleme.",
+        action: "Nicht rauchen und verrauchte Räume meiden. Entwöhnung früh mit Ärztin, Hebamme oder Beratung planen.",
+        sources: [1, 2]
+      },
+      {
+        title: "Cannabis, THC und CBD",
+        examples: "Rauchen, Vapen, Edibles, Getränke, Dabbing, Öle, CBD-Produkte.",
+        status: "tabu",
+        category: "Substanzen",
+        topics: ["Genussmittel", "Plazenta"],
+        why: "THC kann über die Plazenta zum Fetus gelangen; Empfehlungen raten Schwangeren vom Konsum ab.",
+        action: "Nicht verwenden, auch nicht gegen Übelkeit oder Schlafprobleme ohne medizinische Alternative.",
+        sources: [7]
+      },
+      {
+        title: "Nicht verordnete Drogen und missbrauchte Medikamente",
+        examples: "Opioide ohne ärztliche Kontrolle, Kokain, Amphetamine, Benzodiazepine außerhalb der Verordnung.",
+        status: "tabu",
+        category: "Substanzen",
+        topics: ["Genussmittel", "Medikamente"],
+        why: "Substanzkonsum kann Schwangerschaft und Neugeborenes gefährden; abruptes Absetzen kann je nach Substanz ebenfalls riskant sein.",
+        action: "Sofort vertraulich medizinisch ansprechen. Bei Abhängigkeit Entzug oder Substitution begleitet planen.",
+        sources: [1, 10]
+      },
+      {
+        title: "Rohes oder nicht durchgegartes Fleisch",
+        examples: "Carpaccio, Tatar, Mett, rosa Steak, rohes Hack, unvollständig gegartes Geflügel.",
+        status: "cook",
+        category: "Fleisch & Wurst",
+        topics: ["Listerien", "Toxoplasmose", "Salmonellen"],
+        why: "Rohes Fleisch kann Toxoplasmen, Listerien, Salmonellen oder Campylobacter übertragen.",
+        action: "Nur vollständig durchgegart essen; kein roter Kern, austretender Saft klar, Küchenhygiene strikt trennen.",
+        sources: [1, 3, 5, 13]
+      },
+      {
+        title: "Rohwurst und luftgetrocknete Wurstwaren",
+        examples: "Salami, Teewurst, Zwiebelmettwurst, Chorizo, roher Schinken, Sucuk, Landjäger.",
+        status: "tabu",
+        category: "Fleisch & Wurst",
+        topics: ["Listerien", "Toxoplasmose"],
+        why: "Nicht erhitzte, gereifte oder streichfähige Rohwurst kann Erreger enthalten; BfR nennt Rohwurst als Risikolebensmittel.",
+        action: "Kalt meiden. Auf Pizza, Auflauf oder Pfanne nur essen, wenn das Produkt vollständig durcherhitzt wurde.",
+        sources: [1, 2, 3, 13]
+      },
+      {
+        title: "Aufschnitt, Hot Dogs und verzehrfertige Fleischwaren",
+        examples: "Cold cuts, Feinkostaufschnitt, Wiener/Hot Dogs, Fleischsalat, lange gekühlte Fertigware.",
+        status: "cook",
+        category: "Fleisch & Wurst",
+        topics: ["Listerien"],
+        why: "Listerien können sich auch im Kühlschrank und in Vakuumverpackungen vermehren.",
+        action: "Sehr frisch verbrauchen oder bis dampfend heiß erhitzen; offene Thekenware und lange Lagerung meiden.",
+        sources: [2, 3, 5]
+      },
+      {
+        title: "Leber, Leberprodukte und Retinol",
+        examples: "Leberwurst, Leberpastete, Leberknödel, Cod-Liver-Oil, Vitamin-A-/Retinol-Supplemente.",
+        status: "tabu",
+        category: "Supplemente & Medikamente",
+        topics: ["Vitamin A", "Supplemente"],
+        why: "Sehr hohe Mengen vorgeformten Vitamin A können die kindliche Entwicklung schädigen.",
+        action: "In der Schwangerschaft meiden; Prenatalpräparate auf Retinol/Vitamin A prüfen und ärztlich abstimmen.",
+        sources: [11, 12]
+      },
+      {
+        title: "Rohmilch und unpasteurisierte Milchprodukte",
+        examples: "Rohmilch, Vorzugsmilch, Rohmilchkäse, nicht pasteurisierter Joghurt oder Frischkäse.",
+        status: "tabu",
+        category: "Milch & Käse",
+        topics: ["Listerien"],
+        why: "Rohmilch und daraus hergestellte Produkte gehören zu den häufig genannten Listerienrisiken.",
+        action: "Nur pasteurisierte oder ultrahocherhitzte Produkte wählen; Rohmilchkennzeichnung prüfen.",
+        sources: [2, 3, 5]
+      },
+      {
+        title: "Weichkäse, Schmiere- und Blauschimmelkäse",
+        examples: "Brie, Camembert, Romadur, Limburger, Gorgonzola, Roquefort, Käse mit Rot-/Gelbschmiere.",
+        status: "cook",
+        category: "Milch & Käse",
+        topics: ["Listerien"],
+        why: "Hoher Wassergehalt, Oberflächenreifung und Verarbeitung können Listerien begünstigen, auch bei pasteurisierter Milch.",
+        action: "Kalt meiden, wenn riskant. Sicherer ist Hartkäse; riskante Sorten nur durcherhitzt essen.",
+        sources: [1, 2, 3]
+      },
+      {
+        title: "Rohe oder weiche Eier",
+        examples: "Tiramisu, Mousse au Chocolat, selbstgemachte Mayonnaise, weiches Frühstücksei, roher Keksteig.",
+        status: "cook",
+        category: "Eier & Teig",
+        topics: ["Salmonellen"],
+        why: "Rohe oder nicht vollständig gegarte Eier können Salmonellen enthalten.",
+        action: "Eiweiß und Eigelb fest werden lassen; für kalte Speisen pasteurisierte Eier verwenden.",
+        sources: [1, 5]
+      },
+      {
+        title: "Roher Teig und rohe Mehlmischungen",
+        examples: "Keksteig, Kuchenteig, Pfannkuchenteig, Backmischungen mit rohem Mehl.",
+        status: "tabu",
+        category: "Eier & Teig",
+        topics: ["Lebensmittelinfektionen"],
+        why: "Rohes Mehl und rohe Eier können Krankheitserreger tragen.",
+        action: "Teig erst nach dem Backen oder Kochen probieren; essbaren Teig nur mit hitzebehandeltem Mehl und pasteurisiertem Ei.",
+        sources: [5]
+      },
+      {
+        title: "Roher Fisch und rohe Meeresfrüchte",
+        examples: "Sushi mit rohem Fisch, Sashimi, Ceviche, rohe Austern, rohe Muscheln.",
+        status: "tabu",
+        category: "Fisch & Meer",
+        topics: ["Listerien", "Lebensmittelinfektionen"],
+        why: "Roher Fisch und Schalentiere können Listerien, Parasiten oder andere Erreger enthalten.",
+        action: "Nur vollständig gegart essen; Sushi nur mit gegartem Fisch oder vegetarisch und hygienisch frisch.",
+        sources: [1, 3, 5, 8]
+      },
+      {
+        title: "Geräucherter oder gebeizter Fisch",
+        examples: "Räucherlachs, Graved Lachs, Stremellachs, geräucherte Forelle, Räuchermakrele.",
+        status: "cook",
+        category: "Fisch & Meer",
+        topics: ["Listerien"],
+        why: "Kalt geräucherte oder gebeizte Fischprodukte werden als Listerienrisiko genannt.",
+        action: "Kalt meiden; nur verwenden, wenn das Produkt in einem Gericht vollständig durcherhitzt wird.",
+        sources: [1, 2, 3, 5]
+      },
+      {
+        title: "Fisch mit hohem Quecksilbergehalt",
+        examples: "Hai, Schwertfisch, Königsmakrele, Marlin, Tilefish, Bigeye-Thunfisch; lokale Raubfische nach Warnhinweisen.",
+        status: "tabu",
+        category: "Fisch & Meer",
+        topics: ["Quecksilber"],
+        why: "Methylquecksilber kann die Gehirn- und Nervensystementwicklung beeinträchtigen.",
+        action: "High-Mercury-Fische meiden. Niedrig belastete Arten wie Lachs, Hering, Sardinen, Forelle, Seelachs oder Garnelen bevorzugen.",
+        sources: [5, 8]
+      },
+      {
+        title: "Thunfisch und größere Raubfische begrenzen",
+        examples: "Albacore/weißer Thun, Gelbflossen-Thun, große selbst gefangene Fische.",
+        status: "limit",
+        category: "Fisch & Meer",
+        topics: ["Quecksilber"],
+        why: "Einige Arten liegen nicht in der strengsten Meiden-Gruppe, enthalten aber mehr Quecksilber als viele Alternativen.",
+        action: "Nach FDA/EPA höchstens eine Portion pro Woche aus der Good-Choices-Gruppe und dann keinen weiteren Fisch in dieser Woche.",
+        sources: [8]
+      },
+      {
+        title: "Rohe Sprossen und Keimlinge",
+        examples: "Alfalfa-, Mungbohnen-, Radieschen-, Brokkoli- oder Linsensprossen auf Salaten und Bowls.",
+        status: "cook",
+        category: "Pflanzen & Feinkost",
+        topics: ["Lebensmittelinfektionen"],
+        why: "Sprossen können Keime im Inneren tragen und sind roh schwer sicher zu reinigen.",
+        action: "Roh meiden. Nur essen, wenn sie vollständig erhitzt wurden.",
+        sources: [2, 5]
+      },
+      {
+        title: "Ungewaschenes Obst, Gemüse und Erde-Kontakt",
+        examples: "Salat, Kräuter, Beeren, Karotten, Kartoffeln, Gemüse aus Garten oder Markt.",
+        status: "cook",
+        category: "Pflanzen & Feinkost",
+        topics: ["Toxoplasmose", "Lebensmittelinfektionen"],
+        why: "Erde und Oberflächen können Toxoplasmen oder andere Erreger tragen.",
+        action: "Gründlich waschen, erdiges Gemüse getrennt lagern, Hände/Schneidebretter reinigen; bei Unsicherheit erhitzen.",
+        sources: [2, 13]
+      },
+      {
+        title: "Tiefkühlbeeren, TK-Gemüse und offene Feinkost",
+        examples: "TK-Beeren im Smoothie, TK-Kräuter, Antipasti/Oliven aus offenen Gefäßen, Kantinen-Feinkost.",
+        status: "cook",
+        category: "Pflanzen & Feinkost",
+        topics: ["Lebensmittelinfektionen"],
+        why: "BfR nennt Tiefkühlbeeren sowie Feinkost und Antipasti aus offenen Gefäßen als zu meidende oder zu erhitzende Risikoprodukte.",
+        action: "TK-Beeren und TK-Kräuter vor Verzehr erhitzen; offene Feinkost lieber meiden oder frisch durcherhitzt wählen.",
+        sources: [2]
+      },
+      {
+        title: "Gekühlte Pates, Aufstriche und Feinkostsalate",
+        examples: "Fleischpate, vegetarische Pate, Hummus/Creme aus offener Theke, Geflügel- oder Eiersalat.",
+        status: "tabu",
+        category: "Pflanzen & Feinkost",
+        topics: ["Listerien"],
+        why: "Kühlpflichtige verzehrfertige Produkte ohne erneute Erhitzung sind anfällig für Listerienwachstum.",
+        action: "Offene oder gekühlte Thekenware meiden. Haltbare, ungeöffnete Ware ist sicherer; nach Öffnen rasch verbrauchen.",
+        sources: [3, 5]
+      },
+      {
+        title: "Unpasteurisierte Säfte und Cider",
+        examples: "Frisch gepresster ungepasteurisierter Saft, Rohsaft, Farm-Cider, Saft aus offener Saftpresse.",
+        status: "tabu",
+        category: "Getränke",
+        topics: ["Lebensmittelinfektionen"],
+        why: "Unpasteurisierte Getränke können Erreger enthalten.",
+        action: "Pasteurisierte Säfte wählen oder Saft frisch aus gewaschenem Obst zuhause zubereiten und sofort trinken.",
+        sources: [5]
+      },
+      {
+        title: "Energydrinks und sehr koffeinhaltige Produkte",
+        examples: "Energy Drinks, Shots, Guarana-Drinks, Pre-Workout-Booster, koffeinhaltige Supplements.",
+        status: "tabu",
+        category: "Getränke",
+        topics: ["Koffein", "Supplemente"],
+        why: "Neben Koffein enthalten sie häufig Taurin, Inosit oder andere Zusätze; deutsche Empfehlungen raten Schwangeren zum Verzicht.",
+        action: "Meiden. Für Kaffee/Tee die Tagesmenge insgesamt unter etwa 200 mg Koffein halten.",
+        sources: [1, 4, 14]
+      },
+      {
+        title: "Kaffee, schwarzer/grüner Tee, Cola und Kakao",
+        examples: "Filterkaffee, Espresso, Matcha, Schwarztee, Grüntee, Cola, Eistee, Kakao.",
+        status: "limit",
+        category: "Getränke",
+        topics: ["Koffein"],
+        why: "Hohe Koffeinzufuhr wird mit Wachstumsverzögerung, niedrigem Geburtsgewicht und Schwangerschaftsverlust assoziiert.",
+        action: "Moderate Mengen: als Orientierung maximal 200 mg Koffein pro Tag aus allen Quellen zusammen.",
+        sources: [1, 4, 14]
+      },
+      {
+        title: "Chininhaltige Getränke",
+        examples: "Tonic Water, Bitter Lemon und andere als chininhaltig gekennzeichnete Limonaden.",
+        status: "tabu",
+        category: "Getränke",
+        topics: ["Chinin"],
+        why: "Das BfR empfiehlt Schwangeren vorsorglich, auf chininhaltige Getränke zu verzichten.",
+        action: "Meiden, auch nicht gegen Wadenkrämpfe oder Übelkeit einsetzen.",
+        sources: [9]
+      },
+      {
+        title: "Lakritz in größeren Mengen",
+        examples: "Süßlakritz, Salzlakritz, Starklakritz, Lakritztee oder Extrakte.",
+        status: "limit",
+        category: "Getränke",
+        topics: ["Glycyrrhizin"],
+        why: "Glycyrrhizin kann bei häufig großen Mengen Mineralstoffwechsel, Blutdruck und Wassereinlagerungen beeinflussen.",
+        action: "Gelegentliche kleine Mengen sind anders zu bewerten als regelmäßige große Mengen; größere Mengen vorsorglich meiden.",
+        sources: [2]
+      },
+      {
+        title: "Algen und Algenprodukte",
+        examples: "Kelp, Wakame-Snacks, Nori in großen Mengen, Jod-Algenkapseln, Kombu-Brühen.",
+        status: "tabu",
+        category: "Supplemente & Medikamente",
+        topics: ["Jod", "Schadstoffe"],
+        why: "Algen können stark schwankende und sehr hohe Jodgehalte sowie Arsen oder andere Kontaminanten enthalten.",
+        action: "In der Schwangerschaft nicht als Jodquelle verwenden; Jodgabe individuell nach Empfehlung.",
+        sources: [1]
+      },
+      {
+        title: "Kräuterpräparate, Detox- und Abnehmprodukte",
+        examples: "Botanicals, hoch dosierte Kräuterextrakte, Detoxtees, Abführtees, Gewichtsverlust-Supplemente.",
+        status: "ask",
+        category: "Supplemente & Medikamente",
+        topics: ["Supplemente"],
+        why: "Viele botanische Supplemente sind in der Schwangerschaft unzureichend geprüft und können Wirkstoffe, Koffein oder Kontaminanten enthalten.",
+        action: "Nur nach ärztlicher oder pharmazeutischer Rücksprache nutzen; Zutatenliste und Dosierung prüfen.",
+        sources: [11]
+      },
+      {
+        title: "Arzneimittel nicht eigenmächtig beginnen oder absetzen",
+        examples: "Schmerzmittel, Psychopharmaka, Blutdruckmittel, Akne-/Retinoidmittel, Antiepileptika, Antibiotika.",
+        status: "ask",
+        category: "Supplemente & Medikamente",
+        topics: ["Medikamente"],
+        why: "Nutzen und Risiko hängen stark von Wirkstoff, Dosis, Schwangerschaftswoche und Erkrankung ab; unbehandelte Erkrankungen können ebenfalls schaden.",
+        action: "Vor Einnahme oder Absetzen Rücksprache halten. Embryotox kann Wirkstoffinformationen und individuelle Beratung bieten.",
+        sources: [1, 10]
+      }
+    ];
+
+    const statusMeta = {
+      tabu: { label: "Meiden", color: "var(--tabu)", soft: "var(--soft-red)" },
+      cook: { label: "Nur erhitzt", color: "var(--cook)", soft: "var(--soft-amber)" },
+      limit: { label: "Begrenzen", color: "var(--limit)", soft: "var(--soft-teal)" },
+      ask: { label: "Rücksprache", color: "var(--ask)", soft: "var(--soft-blue)" }
+    };
+
+    const state = {
+      q: "",
+      category: "all",
+      status: "all",
+      topic: "all"
+    };
+
+    const searchInput = document.querySelector("#searchInput");
+    const categorySelect = document.querySelector("#categorySelect");
+    const cards = document.querySelector("#cards");
+    const resultLine = document.querySelector("#resultLine");
+    const topicChips = document.querySelector("#topicChips");
+    const segButtons = [...document.querySelectorAll(".seg button")];
+
+    function sourceLink(id) {
+      const src = sources.find(source => source.id === id);
+      return src ? src.url : "#quellen";
+    }
+
+    function normalize(text) {
+      return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function renderMetric() {
+      const counts = Object.fromEntries(Object.keys(statusMeta).map(key => [key, items.filter(item => item.status === key).length]));
+      document.querySelector("#metricTabu").textContent = counts.tabu;
+      document.querySelector("#metricCook").textContent = counts.cook;
+      document.querySelector("#metricSources").textContent = sources.length;
+      const total = items.length;
+      document.querySelector("#statusRail").style.cssText = `--tabu-w:${counts.tabu / total}fr; --cook-w:${counts.cook / total}fr; --limit-w:${counts.limit / total}fr; --ask-w:${counts.ask / total}fr`;
+
+      const legend = document.querySelector("#legend");
+      legend.innerHTML = Object.entries(statusMeta).map(([key, meta]) => `
+        <div class="legend-item">
+          <span><i class="dot" style="background:${meta.color}"></i>${meta.label}</span>
+          <strong class="legend-count">${counts[key]}</strong>
+        </div>
+      `).join("");
+
+      const riskCounts = {};
+      items.forEach(item => item.topics.forEach(topic => {
+        riskCounts[topic] = (riskCounts[topic] || 0) + 1;
+      }));
+      const topRisks = Object.entries(riskCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+      const max = topRisks[0]?.[1] || 1;
+      const palette = ["var(--tabu)", "var(--cook)", "var(--limit)", "var(--ask)", "var(--green)", "#6b7280"];
+      document.querySelector("#riskStack").innerHTML = topRisks.map(([name, count], index) => `
+        <div class="risk-row">
+          <span>${name}</span>
+          <div class="risk-track"><div class="risk-fill" style="--w:${(count / max) * 100}%; --c:${palette[index]}"></div></div>
+          <strong>${count}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderFilters() {
+      const categories = [...new Set(items.map(item => item.category))].sort((a, b) => a.localeCompare(b, "de"));
+      categorySelect.innerHTML += categories.map(category => `<option value="${category}">${category}</option>`).join("");
+
+      const topicCounts = {};
+      items.forEach(item => item.topics.forEach(topic => {
+        topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+      }));
+      const chips = [
+        ["all", "Alle Themen"],
+        ...Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([topic]) => [topic, topic])
+      ];
+      topicChips.innerHTML = chips.map(([value, label]) => `<button class="chip ${value === "all" ? "active" : ""}" type="button" data-topic="${value}">${label}</button>`).join("");
+      topicChips.addEventListener("click", event => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        state.topic = button.dataset.topic;
+        [...topicChips.querySelectorAll("button")].forEach(chip => chip.classList.toggle("active", chip.dataset.topic === state.topic));
+        renderCards();
+      });
+    }
+
+    function itemMatches(item) {
+      const q = normalize(state.q.trim());
+      const haystack = normalize(`${item.title} ${item.examples} ${item.why} ${item.action} ${item.category} ${item.topics.join(" ")}`);
+      return (!q || haystack.includes(q)) &&
+        (state.category === "all" || item.category === state.category) &&
+        (state.status === "all" || item.status === state.status) &&
+        (state.topic === "all" || item.topics.includes(state.topic));
+    }
+
+    function renderCards() {
+      state.q = searchInput.value;
+      state.category = categorySelect.value;
+      const filtered = items.filter(itemMatches);
+      resultLine.textContent = `${filtered.length} von ${items.length} Einträgen sichtbar. Nutze Suche und Filter für konkrete Produkte.`;
+      if (!filtered.length) {
+        cards.innerHTML = `
+          <div class="empty">
+            <strong>Keine Treffer.</strong><br>
+            Suchbegriff oder Filter zurücksetzen.
+            <br><button class="clear-btn" type="button" id="clearFilters">Filter löschen</button>
+          </div>
+        `;
+        document.querySelector("#clearFilters").addEventListener("click", clearFilters);
+        return;
+      }
+
+      cards.innerHTML = filtered.map(item => {
+        const meta = statusMeta[item.status];
+        return `
+          <article class="risk-card" data-status="${item.status}">
+            <div class="card-top">
+              <span class="badge">${meta.label}</span>
+              <span class="card-category">${item.category}</span>
+            </div>
+            <h2>${item.title}</h2>
+            <div class="examples">${item.examples}</div>
+            <div class="why">${item.why}</div>
+            <div class="action">${item.action}</div>
+            <div class="sources-mini" aria-label="Quellen">
+              ${item.sources.map(id => `<a class="source-num" href="${sourceLink(id)}" title="Quelle ${id}"> ${id}</a>`).join("")}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function clearFilters() {
+      state.q = "";
+      state.category = "all";
+      state.status = "all";
+      state.topic = "all";
+      searchInput.value = "";
+      categorySelect.value = "all";
+      segButtons.forEach(button => button.classList.toggle("active", button.dataset.status === "all"));
+      [...topicChips.querySelectorAll("button")].forEach(chip => chip.classList.toggle("active", chip.dataset.topic === "all"));
+      renderCards();
+    }
+
+    searchInput.addEventListener("input", event => {
+      state.q = event.target.value;
+      renderCards();
+    });
+
+    categorySelect.addEventListener("change", event => {
+      state.category = event.target.value;
+      renderCards();
+    });
+
+    segButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        state.status = button.dataset.status;
+        segButtons.forEach(item => item.classList.toggle("active", item === button));
+        renderCards();
+      });
+    });
+
+    document.querySelector("#resetFilters").addEventListener("click", clearFilters);
+
+    const caffeineData = [
+      { key: "filter", label: "Filterkaffee", unit: "Tassen à 200 ml", mg: 90 },
+      { key: "espresso", label: "Espresso", unit: "Portionen à 60 ml", mg: 80 },
+      { key: "blackTea", label: "Schwarzer Tee", unit: "Tassen à 200 ml", mg: 45 },
+      { key: "greenTea", label: "Grüner Tee", unit: "Tassen à 200 ml", mg: 30 },
+      { key: "cola", label: "Cola / Eistee", unit: "Dosen à 330 ml", mg: 35 },
+      { key: "energy", label: "Energydrink", unit: "Dosen à 250 ml", mg: 80 },
+      { key: "cocoa", label: "Kakao", unit: "Becher à 200 ml", mg: 20 }
+    ];
+
+    function renderCalculator() {
+      const container = document.querySelector("#caffeineCalc");
+      container.innerHTML = caffeineData.map(drink => `
+        <label class="calc-row">
+          <span class="calc-label">${drink.label}<small>${drink.unit}, ca. ${drink.mg} mg</small></span>
+          <input type="text" pattern="[0-9]*" value="0" inputmode="numeric" data-mg="${drink.mg}" data-key="${drink.key}">
+        </label>
+      `).join("");
+      container.addEventListener("input", updateCaffeine);
+      updateCaffeine();
+    }
+
+    function updateCaffeine() {
+      const inputs = [...document.querySelectorAll("#caffeineCalc input")];
+      const total = inputs.reduce((sum, input) => sum + (Number(input.value || 0) * Number(input.dataset.mg)), 0);
+      const energyCount = Number(inputs.find(input => input.dataset.key === "energy")?.value || 0);
+      document.querySelector("#caffeineTotal").textContent = total;
+      const pos = Math.min(100, Math.max(0, (total / 300) * 100));
+      document.querySelector("#limitMarker").style.setProperty("--pos", `${pos}%`);
+      const feedback = document.querySelector("#caffeineFeedback");
+      if (energyCount > 0) {
+        feedback.textContent = "Energydrink erfasst: Die Koffeinmenge ist nicht das einzige Thema. Empfehlungen raten Schwangeren zum Verzicht auf Energydrinks.";
+      } else if (total <= 150) {
+        feedback.textContent = "Im moderaten Bereich. Rechne Schokolade, Matcha, Guarana und Medikamente mit Koffein zusätzlich mit.";
+      } else if (total <= 200) {
+        feedback.textContent = "Nah an der Orientierungsgrenze von 200 mg pro Tag. Für heute eher koffeinarm weitertrinken.";
+      } else {
+        feedback.textContent = "Über der 200-mg-Orientierung. Reduziere heute weitere Koffeinquellen und sprich bei regelmäßig hohen Mengen medizinisch darüber.";
+      }
+    }
+
+    function renderSources() {
+      document.querySelector("#sourceGrid").innerHTML = sources.map(source => `
+        <a class="source-card" href="${source.url}" target="_blank" rel="noreferrer" id="quelle-${source.id}">
+          <span class="source-num">${source.id}</span>
+          <span>
+            <strong>${source.name}</strong>
+            <span>${source.org}</span>
+          </span>
+        </a>
+      `).join("");
+    }
+
+    renderMetric();
+    renderFilters();
+    renderCards();
+    renderCalculator();
+    renderSources();
+  </script>
+</body>
+</html>
