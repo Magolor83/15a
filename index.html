@@ -1531,6 +1531,7 @@
       { key: "espresso", label: "Espresso", unit: "Portionen à 60 ml", mg: 80 },
       { key: "blackTea", label: "Schwarzer Tee", unit: "Tassen à 200 ml", mg: 45 },
       { key: "greenTea", label: "Grüner Tee", unit: "Tassen à 200 ml", mg: 30 },
+      { key: "matcha", label: "Matcha", unit: "Portionen à 200 ml", mg: 70 },
       { key: "cola", label: "Cola / Eistee", unit: "Dosen à 330 ml", mg: 35 },
       { key: "energy", label: "Energydrink", unit: "Dosen à 250 ml", mg: 80 },
       { key: "cocoa", label: "Kakao", unit: "Becher à 200 ml", mg: 20 }
@@ -1559,7 +1560,7 @@
       if (energyCount > 0) {
         feedback.textContent = "Energydrink erfasst: Die Koffeinmenge ist nicht das einzige Thema. Empfehlungen raten Schwangeren zum Verzicht auf Energydrinks.";
       } else if (total <= 150) {
-        feedback.textContent = "Im moderaten Bereich. Rechne Schokolade, Matcha, Guarana und Medikamente mit Koffein zusätzlich mit.";
+        feedback.textContent = "Im moderaten Bereich. Rechne Schokolade, Guarana und Medikamente mit Koffein zusätzlich mit.";
       } else if (total <= 200) {
         feedback.textContent = "Nah an der Orientierungsgrenze von 200 mg pro Tag. Für heute eher koffeinarm weitertrinken.";
       } else {

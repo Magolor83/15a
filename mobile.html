@@ -413,6 +413,10 @@
       display: block;
     }
 
+    .top-caffeine {
+      margin-bottom: 16px;
+    }
+
     .tool-panel {
       padding: 14px;
     }
@@ -768,31 +772,7 @@
   </header>
 
   <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">Schnell nachschlagen</p>
-      <h1>Meiden, erhitzen oder begrenzen?</h1>
-      <p class="lead">Eine mobile Ampelliste für Lebensmittel, Getränke, Substanzen, Supplemente und Medikamente in der Schwangerschaft.</p>
-      <div class="summary" id="summary"></div>
-      <div class="notice">Kein Ersatz für ärztliche Beratung. Bei Medikamenten, Suchtmitteln, Erkrankungen oder Symptomen bitte medizinisch abklären.</div>
-    </section>
-
-    <section class="section active" id="screen-check" aria-label="Checkliste">
-      <div class="panel search-panel">
-        <div class="search-row">
-          <label class="search-wrap">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <input class="search" id="search" type="search" placeholder="Sushi, Salami, Kaffee...">
-          </label>
-          <button class="icon-btn" id="clear" type="button" aria-label="Suche und Filter löschen">×</button>
-        </div>
-        <div class="scroller" id="statusFilters" aria-label="Empfehlung filtern"></div>
-        <div class="scroller" id="categoryFilters" aria-label="Kategorie filtern"></div>
-        <div class="resultbar"><span id="resultText"></span><span id="activeHint"></span></div>
-      </div>
-      <div class="list" id="list"></div>
-    </section>
-
-    <section class="section" id="screen-caffeine" aria-label="Koffeinrechner">
+    <section class="section active top-caffeine" id="screen-caffeine" aria-label="Koffeinrechner">
       <div class="panel tool-panel">
         <h2>Koffein-Rechner</h2>
         <p>Als Orientierung gelten 200 mg Koffein pro Tag. Energydrinks werden Schwangeren trotz ähnlicher Koffeinmenge zum Verzicht empfohlen.</p>
@@ -808,6 +788,30 @@
       </div>
     </section>
 
+    <section class="hero">
+      <p class="eyebrow">Schnell nachschlagen</p>
+      <h1>Meiden, erhitzen oder begrenzen?</h1>
+      <p class="lead">Eine mobile Ampelliste für Lebensmittel, Getränke, Substanzen, Supplemente und Medikamente in der Schwangerschaft.</p>
+      <div class="summary" id="summary"></div>
+      <div class="notice">Kein Ersatz für ärztliche Beratung. Bei Medikamenten, Suchtmitteln, Erkrankungen oder Symptomen bitte medizinisch abklären.</div>
+    </section>
+
+    <section class="section" id="screen-check" aria-label="Checkliste">
+      <div class="panel search-panel">
+        <div class="search-row">
+          <label class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input class="search" id="search" type="search" placeholder="Sushi, Salami, Kaffee...">
+          </label>
+          <button class="icon-btn" id="clear" type="button" aria-label="Suche und Filter löschen">×</button>
+        </div>
+        <div class="scroller" id="statusFilters" aria-label="Empfehlung filtern"></div>
+        <div class="scroller" id="categoryFilters" aria-label="Kategorie filtern"></div>
+        <div class="resultbar"><span id="resultText"></span><span id="activeHint"></span></div>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+
     <section class="section" id="screen-sources" aria-label="Quellen">
       <div class="panel source-panel">
         <h2>Quellen</h2>
@@ -818,8 +822,8 @@
   </main>
 
   <nav class="tabbar" aria-label="Hauptnavigation">
-    <button type="button" class="active" data-screen="check"><strong>⌕</strong><span>Check</span></button>
-    <button type="button" data-screen="caffeine"><strong>mg</strong><span>Koffein</span></button>
+    <button type="button" class="active" data-screen="caffeine"><strong>mg</strong><span>Koffein</span></button>
+    <button type="button" data-screen="check"><strong>⌕</strong><span>Check</span></button>
     <button type="button" data-screen="sources"><strong>§</strong><span>Quellen</span></button>
   </nav>
 
@@ -966,6 +970,7 @@
       ["Espresso", "60 ml, ca. 80 mg", 80, "espresso"],
       ["Schwarzer Tee", "200 ml, ca. 45 mg", 45, "black"],
       ["Grüner Tee", "200 ml, ca. 30 mg", 30, "green"],
+      ["Matcha", "200 ml, ca. 70 mg", 70, "matcha"],
       ["Cola / Eistee", "330 ml, ca. 35 mg", 35, "cola"],
       ["Energydrink", "250 ml, ca. 80 mg", 80, "energy"],
       ["Kakao", "200 ml, ca. 20 mg", 20, "cocoa"]
@@ -991,7 +996,7 @@
       if (energy > 0) {
         feedback.textContent = "Energydrink eingegeben: In der Schwangerschaft wird zum Verzicht geraten, unabhängig vom reinen Koffeinwert.";
       } else if (total <= 150) {
-        feedback.textContent = "Moderater Bereich. Schokolade, Matcha, Guarana und koffeinhaltige Medikamente mitdenken.";
+        feedback.textContent = "Moderater Bereich. Schokolade, Guarana und koffeinhaltige Medikamente mitdenken.";
       } else if (total <= 200) {
         feedback.textContent = "Nah an der 200-mg-Orientierung. Heute besser koffeinarm weitertrinken.";
       } else {
