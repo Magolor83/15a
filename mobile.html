@@ -584,6 +584,86 @@
       line-height: 1.38;
     }
 
+    .caffeine-analysis {
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(24, 33, 31, .05);
+    }
+
+    .analysis-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .analysis-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .analysis-metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfa;
+    }
+
+    .analysis-metric strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .analysis-metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .trend-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .trend-row {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) 52px;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .trend-track {
+      height: 9px;
+      border-radius: 999px;
+      background: #eef1ee;
+      overflow: hidden;
+    }
+
+    .trend-fill {
+      height: 100%;
+      width: var(--w);
+      max-width: 100%;
+      border-radius: inherit;
+      background: var(--c);
+    }
+
+    .analysis-empty {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
     .source-panel {
       padding: 14px;
     }
@@ -855,6 +935,7 @@
           <div class="bar" aria-hidden="true"><span class="marker" id="marker"></span></div>
           <div class="feedback" id="feedback"></div>
         </div>
+        <div class="caffeine-analysis" id="caffeineAnalysis" aria-live="polite"></div>
       </div>
     </section>
 
@@ -1116,6 +1197,7 @@
       });
       updateCalc();
       caffeineStore.loading = false;
+      renderCaffeineAnalysis();
       updateCaffeineSyncStatus(caffeineStore.ready ? "Server verbunden" : "Lokal geladen");
     }
 
@@ -1126,6 +1208,7 @@
         updatedAt: new Date().toISOString()
       };
       saveCaffeineDaysLocal();
+      renderCaffeineAnalysis();
     }
 
     function queueCaffeineSave() {
@@ -1154,7 +1237,7 @@
           import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
           import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
         ]);
-        const app = appModule.initializeApp(caffeineStore.config, "pregnancy-caffeine-mobile");
+        const app = appModule.initializeApp(caffeineStore.config, "pregnancy-caffeine");
         caffeineStore.modules = { ...authModule, ...firestoreModule };
         caffeineStore.auth = authModule.getAuth(app);
         caffeineStore.db = firestoreModule.getFirestore(app);
@@ -1247,6 +1330,63 @@
     function updateCaffeineSyncStatus(text) {
       const status = document.querySelector("#caffeineSyncStatus");
       if (status) status.textContent = text;
+    }
+
+    function computeCaffeineTotal(values = {}) {
+      return caffeine.reduce((sum, [, , mg, key]) => sum + (Number(values[key] || 0) * mg), 0);
+    }
+
+    function savedCaffeineDays() {
+      return Object.entries(caffeineStore.days)
+        .map(([date, day]) => ({
+          date,
+          total: Number(day?.total ?? computeCaffeineTotal(day?.values || {})),
+          values: day?.values || {}
+        }))
+        .filter(day => day.total > 0 || Object.values(day.values).some(value => Number(value) > 0))
+        .sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function formatDay(date) {
+      const [year, month, day] = date.split("-");
+      return `${day}.${month}.`;
+    }
+
+    function renderCaffeineAnalysis() {
+      const target = document.querySelector("#caffeineAnalysis");
+      if (!target) return;
+      const days = savedCaffeineDays();
+      if (!days.length) {
+        target.innerHTML = `
+          <h3 class="analysis-title">Auswertung</h3>
+          <p class="analysis-empty">Noch keine gespeicherten Tage. Sobald du Werte einträgst, erscheinen hier Verlauf und Kennzahlen.</p>
+        `;
+        return;
+      }
+      const totals = days.map(day => day.total);
+      const sum = totals.reduce((total, value) => total + value, 0);
+      const average = Math.round(sum / days.length);
+      const max = Math.max(...totals);
+      const overLimit = days.filter(day => day.total > 200).length;
+      const chartMax = Math.max(200, max);
+      target.innerHTML = `
+        <h3 class="analysis-title">Auswertung</h3>
+        <div class="analysis-metrics">
+          <div class="analysis-metric"><strong>${days.length}</strong><span>gespeicherte Tage</span></div>
+          <div class="analysis-metric"><strong>${average}</strong><span>mg Ø pro Tag</span></div>
+          <div class="analysis-metric"><strong>${max}</strong><span>mg Maximum</span></div>
+          <div class="analysis-metric"><strong>${overLimit}</strong><span>Tage über 200 mg</span></div>
+        </div>
+        <div class="trend-list">
+          ${days.slice(0, 10).map(day => `
+            <div class="trend-row">
+              <span>${formatDay(day.date)}</span>
+              <span class="trend-track"><span class="trend-fill" style="--w:${Math.min(100, Math.round(day.total / chartMax * 100))}%; --c:${day.total > 200 ? "var(--cook)" : "var(--limit)"}"></span></span>
+              <strong>${day.total} mg</strong>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function updateCalc() {
