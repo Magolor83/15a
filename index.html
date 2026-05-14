@@ -4,6 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Schwangerschaft: Konsum-Check Dashboard</title>
+  <script>
+    (function () {
+      var isMobileViewport = window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+      var isMobileAgent = /Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Mobile/i.test(navigator.userAgent);
+      var alreadyMobile = /\/mobile(?:\.html)?$/.test(window.location.pathname);
+      if ((isMobileViewport || isMobileAgent) && !alreadyMobile) {
+        var target = new URL("mobile.html", window.location.href);
+        target.search = window.location.search;
+        target.hash = window.location.hash;
+        window.location.replace(target.href);
+      }
+    })();
+  </script>
   <style>
     :root {
       color-scheme: light;
