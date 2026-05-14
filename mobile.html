@@ -502,6 +502,22 @@
       cursor: pointer;
     }
 
+    .delete-day-btn {
+      min-height: 38px;
+      border: 1px solid color-mix(in srgb, var(--tabu) 25%, var(--line));
+      border-radius: 8px;
+      background: #fff;
+      color: var(--tabu);
+      padding: 0 12px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .delete-day-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
     .calc-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 78px;
@@ -924,6 +940,7 @@
             <input type="password" id="caffeinePassword" placeholder="Server-Passwort" autocomplete="current-password">
             <button type="submit">Anmelden</button>
           </form>
+          <button class="delete-day-btn" id="deleteCaffeineDay" type="button">Tag löschen</button>
           <div class="sync-status" id="caffeineSyncStatus">Server-Sync wird vorbereitet.</div>
         </div>
         <div class="calc" id="calc"></div>
@@ -1156,6 +1173,7 @@
         loadCaffeineDayIntoInputs();
       });
       document.querySelector("#caffeineLogin").addEventListener("submit", signInCaffeinePassword);
+      document.querySelector("#deleteCaffeineDay").addEventListener("click", deleteCurrentCaffeineDay);
       loadCaffeineDayIntoInputs();
       setupCaffeineSync();
     }
@@ -1198,6 +1216,7 @@
       updateCalc();
       caffeineStore.loading = false;
       renderCaffeineAnalysis();
+      updateDeleteDayButton();
       updateCaffeineSyncStatus(caffeineStore.ready ? "Server verbunden" : "Lokal geladen");
     }
 
@@ -1209,6 +1228,7 @@
       };
       saveCaffeineDaysLocal();
       renderCaffeineAnalysis();
+      updateDeleteDayButton();
     }
 
     function queueCaffeineSave() {
@@ -1323,6 +1343,28 @@
       }
     }
 
+    async function deleteCurrentCaffeineDay() {
+      const date = caffeineStore.date;
+      if (!caffeineStore.days[date]) return;
+      delete caffeineStore.days[date];
+      saveCaffeineDaysLocal();
+      loadCaffeineDayIntoInputs();
+      updateCaffeineSyncStatus("Tag lokal gelöscht.");
+      if (!caffeineStore.ready || !caffeineStore.user || !caffeineStore.modules || !caffeineStore.db) return;
+      try {
+        await caffeineStore.modules.updateDoc(
+          caffeineDashboardRef(),
+          new caffeineStore.modules.FieldPath("days", date),
+          caffeineStore.modules.deleteField(),
+          "updatedAt",
+          caffeineStore.modules.serverTimestamp()
+        );
+        updateCaffeineSyncStatus("Tag auf dem Server gelöscht.");
+      } catch {
+        updateCaffeineSyncStatus("Lokal gelöscht. Server-Löschung fehlgeschlagen.");
+      }
+    }
+
     function caffeineDashboardRef() {
       return caffeineStore.modules.doc(caffeineStore.db, "users", caffeineStore.user.uid, "dashboards", caffeineStore.dashboardId);
     }
@@ -1330,6 +1372,11 @@
     function updateCaffeineSyncStatus(text) {
       const status = document.querySelector("#caffeineSyncStatus");
       if (status) status.textContent = text;
+    }
+
+    function updateDeleteDayButton() {
+      const button = document.querySelector("#deleteCaffeineDay");
+      if (button) button.disabled = !caffeineStore.days[caffeineStore.date];
     }
 
     function computeCaffeineTotal(values = {}) {
