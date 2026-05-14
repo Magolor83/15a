@@ -442,6 +442,66 @@
       margin-top: 14px;
     }
 
+    .day-sync {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+    }
+
+    .day-sync label {
+      display: grid;
+      gap: 6px;
+      color: #2a3634;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .day-sync input {
+      min-height: 40px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .sync-status {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .sync-login {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sync-login[hidden] {
+      display: none;
+    }
+
+    .sync-login input {
+      min-height: 38px;
+    }
+
+    .sync-login button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
     .calc-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 78px;
@@ -776,6 +836,16 @@
       <div class="panel tool-panel">
         <h2>Koffein-Rechner</h2>
         <p>Als Orientierung gelten 200 mg Koffein pro Tag. Energydrinks werden Schwangeren trotz ähnlicher Koffeinmenge zum Verzicht empfohlen.</p>
+        <div class="day-sync">
+          <label for="caffeineDate">Tag auswählen
+            <input type="date" id="caffeineDate">
+          </label>
+          <form class="sync-login" id="caffeineLogin" hidden>
+            <input type="password" id="caffeinePassword" placeholder="Server-Passwort" autocomplete="current-password">
+            <button type="submit">Anmelden</button>
+          </form>
+          <div class="sync-status" id="caffeineSyncStatus">Server-Sync wird vorbereitet.</div>
+        </div>
         <div class="calc" id="calc"></div>
         <div class="total">
           <div class="total-head">
@@ -836,6 +906,7 @@
   </aside>
 
   <script src="pregnancy-data.js"></script>
+  <script src="pregnancy-firebase-config.js"></script>
   <script>
     const items = window.PREGNANCY_ITEMS;
     const sources = window.PREGNANCY_SOURCES;
@@ -976,6 +1047,21 @@
       ["Kakao", "200 ml, ca. 20 mg", 20, "cocoa"]
     ];
 
+    const caffeineStore = {
+      dashboardId: window.PREGNANCY_DASHBOARD_ID || "pregnancy-caffeine",
+      config: window.PREGNANCY_FIREBASE_CONFIG || {},
+      sharedEmail: window.PREGNANCY_SHARED_EMAIL || "",
+      date: todayKey(),
+      days: loadCaffeineDaysLocal(),
+      modules: null,
+      auth: null,
+      db: null,
+      user: null,
+      ready: false,
+      loading: false,
+      saveTimer: null
+    };
+
     function renderCalc() {
       document.querySelector("#calc").innerHTML = caffeine.map(([label, unit, mg, key]) => `
         <label class="calc-row">
@@ -983,7 +1069,184 @@
           <input type="text" pattern="[0-9]*" inputmode="numeric" value="0" data-mg="${mg}" data-key="${key}">
         </label>
       `).join("");
+      document.querySelector("#caffeineDate").value = caffeineStore.date;
+      document.querySelector("#caffeineDate").addEventListener("change", event => {
+        caffeineStore.date = event.target.value || todayKey();
+        loadCaffeineDayIntoInputs();
+      });
+      document.querySelector("#caffeineLogin").addEventListener("submit", signInCaffeinePassword);
+      loadCaffeineDayIntoInputs();
+      setupCaffeineSync();
+    }
+
+    function todayKey() {
+      const now = new Date();
+      return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    }
+
+    function hasFirebaseConfig(config) {
+      return Boolean(config && config.apiKey && config.projectId && config.appId);
+    }
+
+    function loadCaffeineDaysLocal() {
+      try {
+        return JSON.parse(localStorage.getItem("pregnancyCaffeineDays:v1") || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveCaffeineDaysLocal() {
+      localStorage.setItem("pregnancyCaffeineDays:v1", JSON.stringify(caffeineStore.days));
+    }
+
+    function readCaffeineValues() {
+      const values = {};
+      document.querySelectorAll("#calc input").forEach(input => {
+        values[input.dataset.key] = Number(String(input.value || "0").replace(/\D/g, "") || 0);
+      });
+      return values;
+    }
+
+    function loadCaffeineDayIntoInputs() {
+      caffeineStore.loading = true;
+      const values = caffeineStore.days[caffeineStore.date]?.values || {};
+      document.querySelectorAll("#calc input").forEach(input => {
+        input.value = values[input.dataset.key] ?? 0;
+      });
       updateCalc();
+      caffeineStore.loading = false;
+      updateCaffeineSyncStatus(caffeineStore.ready ? "Server verbunden" : "Lokal geladen");
+    }
+
+    function storeCurrentCaffeineDay(total) {
+      caffeineStore.days[caffeineStore.date] = {
+        values: readCaffeineValues(),
+        total,
+        updatedAt: new Date().toISOString()
+      };
+      saveCaffeineDaysLocal();
+    }
+
+    function queueCaffeineSave() {
+      if (caffeineStore.loading) return;
+      const total = Number(document.querySelector("#total").textContent || 0);
+      storeCurrentCaffeineDay(total);
+      if (!caffeineStore.ready || !caffeineStore.user) {
+        updateCaffeineSyncStatus("Lokal gespeichert. Server-Sync wartet auf Anmeldung.");
+        return;
+      }
+      clearTimeout(caffeineStore.saveTimer);
+      updateCaffeineSyncStatus("Speichert auf dem Server.");
+      const saveDate = caffeineStore.date;
+      caffeineStore.saveTimer = setTimeout(() => saveCaffeineCloud(saveDate), 450);
+    }
+
+    async function setupCaffeineSync() {
+      if (!hasFirebaseConfig(caffeineStore.config)) {
+        updateCaffeineSyncStatus("Lokal gespeichert. Firebase-Konfiguration fehlt.");
+        return;
+      }
+      updateCaffeineSyncStatus("Server-Sync lädt.");
+      try {
+        const [appModule, authModule, firestoreModule] = await Promise.all([
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+        ]);
+        const app = appModule.initializeApp(caffeineStore.config, "pregnancy-caffeine-mobile");
+        caffeineStore.modules = { ...authModule, ...firestoreModule };
+        caffeineStore.auth = authModule.getAuth(app);
+        caffeineStore.db = firestoreModule.getFirestore(app);
+        authModule.onAuthStateChanged(caffeineStore.auth, async user => {
+          caffeineStore.user = user;
+          if (!user) return;
+          hideCaffeineLogin();
+          await loadCaffeineCloud();
+        });
+        try {
+          await authModule.signInAnonymously(caffeineStore.auth);
+        } catch {
+          showCaffeineLogin("Anonymer Login ist nicht aktiv. Server-Passwort eingeben.");
+        }
+      } catch {
+        updateCaffeineSyncStatus("Nur lokal gespeichert. Firebase konnte nicht geladen werden.");
+      }
+    }
+
+    async function signInCaffeinePassword(event) {
+      event.preventDefault();
+      if (!caffeineStore.auth || !caffeineStore.modules || !caffeineStore.sharedEmail) return;
+      const password = document.querySelector("#caffeinePassword").value;
+      if (!password) return;
+      updateCaffeineSyncStatus("Server-Anmeldung läuft.");
+      try {
+        await caffeineStore.modules.signInWithEmailAndPassword(caffeineStore.auth, caffeineStore.sharedEmail, password);
+        document.querySelector("#caffeinePassword").value = "";
+        hideCaffeineLogin();
+      } catch {
+        showCaffeineLogin("Server-Anmeldung fehlgeschlagen. Passwort prüfen.");
+      }
+    }
+
+    function showCaffeineLogin(message) {
+      const form = document.querySelector("#caffeineLogin");
+      if (form) form.hidden = false;
+      updateCaffeineSyncStatus(message);
+    }
+
+    function hideCaffeineLogin() {
+      const form = document.querySelector("#caffeineLogin");
+      if (form) form.hidden = true;
+    }
+
+    async function loadCaffeineCloud() {
+      if (!caffeineStore.user || !caffeineStore.modules || !caffeineStore.db) return;
+      caffeineStore.loading = true;
+      updateCaffeineSyncStatus("Server-Daten werden geladen.");
+      try {
+        const snapshot = await caffeineStore.modules.getDoc(caffeineDashboardRef());
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          caffeineStore.days = {
+            ...caffeineStore.days,
+            ...(data.days && typeof data.days === "object" ? data.days : {})
+          };
+          saveCaffeineDaysLocal();
+        }
+        caffeineStore.ready = true;
+        loadCaffeineDayIntoInputs();
+        updateCaffeineSyncStatus("Server verbunden. Änderungen werden pro Tag gespeichert.");
+      } catch {
+        updateCaffeineSyncStatus("Server-Daten konnten nicht geladen werden. Lokal weiter nutzbar.");
+      } finally {
+        caffeineStore.loading = false;
+      }
+    }
+
+    async function saveCaffeineCloud(date = caffeineStore.date) {
+      if (!caffeineStore.ready || !caffeineStore.user || !caffeineStore.modules || !caffeineStore.db) return;
+      const day = caffeineStore.days[date];
+      try {
+        await caffeineStore.modules.setDoc(caffeineDashboardRef(), {
+          dashboardId: caffeineStore.dashboardId,
+          days: { [date]: day },
+          selectedDate: date,
+          updatedAt: caffeineStore.modules.serverTimestamp()
+        }, { merge: true });
+        updateCaffeineSyncStatus("Für diesen Tag auf dem Server gespeichert.");
+      } catch {
+        updateCaffeineSyncStatus("Server-Speicherung fehlgeschlagen. Lokal gespeichert.");
+      }
+    }
+
+    function caffeineDashboardRef() {
+      return caffeineStore.modules.doc(caffeineStore.db, "users", caffeineStore.user.uid, "dashboards", caffeineStore.dashboardId);
+    }
+
+    function updateCaffeineSyncStatus(text) {
+      const status = document.querySelector("#caffeineSyncStatus");
+      if (status) status.textContent = text;
     }
 
     function updateCalc() {
@@ -1041,7 +1304,10 @@
     document.addEventListener("keydown", event => {
       if (event.key === "Escape") closeSheet();
     });
-    document.querySelector("#calc").addEventListener("input", updateCalc);
+    document.querySelector("#calc").addEventListener("input", () => {
+      updateCalc();
+      queueCaffeineSave();
+    });
     document.querySelectorAll(".tabbar button").forEach(button => {
       button.addEventListener("click", () => {
         document.querySelectorAll(".tabbar button").forEach(item => item.classList.toggle("active", item === button));
